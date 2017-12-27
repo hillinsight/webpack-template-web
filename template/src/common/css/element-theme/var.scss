@@ -1,0 +1,31 @@
+$--color-primary: #2aa6ff;
+$--color-text-regular: #666;
+$--color-text-placeholder: #ccc;
+$--border-color-base: #ddd;
+$--border-color-lighter: #eee;
+$--background-color-base: #f8f8f8;
+
+$--border-radius-base: 2px;
+$--button-border-radius: 4px;
+$--button-small-border-radius: 2px;
+$--button-mini-border-radius: 2px;
+
+$--font-size-small: 12px;
+$--select-font-size: 12px;
+$--select-input-font-size: 12px;
+
+$--checkbox-font-weight: 400;
+
+$--font-path: '../font';
+
+//$--font-path: '../../../../node_modules/element-ui/lib/theme-chalk/fonts';
+
+@import "../../../../node_modules/element-ui/packages/theme-chalk/src/index";
+
+//$--input-small-height: 30px;
+//$--button-padding-vertical: 10px;
+//$--button-padding-horizontal: 15px;
+//$--button-small-padding-vertical: 8px;
+//$--button-small-padding-horizontal: 16px;
+//$--button-small-border-radius: 2px;
+//$--button-border-radius: $--button-small-border-radius;

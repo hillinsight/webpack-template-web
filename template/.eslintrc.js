@@ -17,13 +17,6 @@ module.exports = {
     "plugins": [
         "vue"
     ],
-    "settings": {
-        "import/resolver": {
-            "webpack": {
-                "config": "webpack.conf.js"
-            }
-        }
-    },
     "globals": {
         "$": true,
         "UE": true

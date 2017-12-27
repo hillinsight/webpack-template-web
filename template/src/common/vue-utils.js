@@ -24,7 +24,6 @@
 import Vue from 'vue';
 import moment from 'moment';
 import accounting from 'accounting';
-import {region} from '@/ui/region/data';
 
 // CDN域名
 const CDN_URL = '';
@@ -55,7 +54,10 @@ utils.date = function (value, formatter = 'YYYY-MM-DD HH:mm:ss', defaults = '') 
  * @return {string}
  */
 utils.dft = function (value, dft = '') {
-    return value || dft;
+    if (typeof value === 'undefined' || value === null || value === '') {
+        return dft;
+    }
+    return value;
 };
 
 /**
@@ -80,6 +82,10 @@ utils.formatNumber = function (number, precision = 0, thousand = ',', decimal = 
  */
 utils.formatMoney = function (number, symbol = '￥', precision = 2, thousand = ',', decimal = '.', format = '%s%v') {
     return accounting.formatMoney(number / 100, symbol, precision, thousand, decimal, format);
+};
+
+utils.toFixed = function (number, precision = 0) {
+    return accounting.toFixed(number, precision).replace(/\.?0+$/g, '');
 };
 
 /**
@@ -130,32 +136,11 @@ utils.staticimage = function (path, rule) {
     return utils.static(path) + '@' + rule;
 };
 
-/**
- * 格式化行政区域代码为文本形式
- *
- * @param {string} code 区划代码
- * @param {string} formatter 格式字符串
- * @param {string} dft 默认值
- * @return {string}
- */
-utils.region = function (code, formatter = '%p/%c/%r', dft = '') {
-    let arr = region(code);
-    return formatter.replace(/%([pcr])/g, function (a, b) {
-        let txt = '';
-        switch (b) {
-        case 'p':
-            txt = arr[0] || dft;
-            break;
-        case 'c':
-            txt = arr[1] || dft;
-            break;
-        case 'r':
-            txt = arr[2] || dft;
-            break;
-        }
-        return txt;
-    });
-};
+for (let fn in utils) {
+    if (utils.hasOwnProperty(fn)) {
+        Vue.filter(fn, utils[fn]);
+    }
+}
 
 /**
  * 将utils绑定到Vue上

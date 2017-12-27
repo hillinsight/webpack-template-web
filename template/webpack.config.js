@@ -9,6 +9,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const isProduction = process.env.NODE_ENV === 'production';
 
 const mockup = require('webpack-dev-server-mock');
+const NodeSassImportOnce = require('node-sass-import-once');
 
 const utils = {};
 
@@ -35,8 +36,6 @@ const env = {
 
 module.exports = {
     entry: {
-        // vendor
-        vendor: ['babel-polyfill', 'vue', 'vue-router', 'moment', 'underscore'],
         // page
         web: './src/web/main.js'
     },
@@ -87,12 +86,38 @@ module.exports = {
                         options: {
                             modules: false
                         }
-                    }, 'postcss-loader', {
+                    },
+                    'postcss-loader',
+                    {
                         loader: 'less-loader',
                         options: {
                             paths: [
                                 path.resolve(__dirname, 'src')
                             ]
+                        }
+                    }]
+                })
+            },
+            {
+                test: /\.scss$/,
+                use: ExtractTextPlugin.extract({
+                    fallback: 'style-loader',
+                    use: [{
+                        loader: 'css-loader',
+                        options: {
+                            modules: false
+                        }
+                    },
+                    'postcss-loader',
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            importer: NodeSassImportOnce,
+                            importOnce: {
+                                index: false,
+                                css: false,
+                                bower: false
+                            }
                         }
                     }]
                 })
@@ -132,20 +157,33 @@ module.exports = {
         //     var: 'Document',
         //     url: './static/bce-sdk-js/baidubce-sdk.bundle.min.js'
         // }]),
-
+        new ExtractTextPlugin({
+            filename: utils.resolveStaticPath('/css/[name]_[contenthash:7].css'),
+            allChunks: true
+        }),
+        // split vendor js into its own file
         new webpack.optimize.CommonsChunkPlugin({
             name: 'vendor',
-            filename: utils.resolveStaticPath('/js/vendor_[hash:7].js')
+            minChunks: function (module, count) {
+                // any required modules inside node_modules are extracted to vendor
+                return (
+                    module.resource &&
+                    /\.js$/.test(module.resource) &&
+                    module.resource.indexOf(path.join(__dirname, './node_modules')) === 0
+                );
+            }
         }),
-        new ExtractTextPlugin({
-            filename: utils.resolveStaticPath('/css/[name]_[chunkhash:7].css'),
-            allChunks: true
+        // extract webpack runtime and module manifest to its own file in order to
+        // prevent vendor hash from being updated whenever app bundle is updated
+        new webpack.optimize.CommonsChunkPlugin({
+            name: 'manifest',
+            filename: utils.resolveStaticPath('/js/manifest_[hash:7].js'),
+            chunks: ['vendor']
         }),
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: 'index.html',
             inject: true,
-            chunks: ['vendor', 'web'],
             minify: {
                 removeComments: true,
                 collapseWhitespace: isProduction,
@@ -161,14 +199,12 @@ module.exports = {
                 ignore: ['.*']
             }
         ])
-
     ],
     resolve: {
         extensions: ['.js', '.vue', '.json'],
         alias: {
             'vue$': 'vue/dist/vue',
             'vue-router$': 'vue-router/dist/vue-router',
-            // 'io$': 'jquery/src/ajax',
             '@': path.resolve(__dirname, './src'),
             '@static': path.resolve(__dirname, './static'),
             '@common': path.resolve(__dirname, './src/common')
@@ -177,6 +213,7 @@ module.exports = {
     externals: {
     },
     devServer: {
+        // https: true,
         host: utils.getIPAdress(),
         historyApiFallback: {
             rewrites: [{
@@ -196,14 +233,25 @@ module.exports = {
 if (process.env.NODE_ENV !== 'testing') {
     module.exports.devServer.before = mockup.setup({
         root: path.resolve(__dirname, 'mockup'),
-        prefix: ['/api/*']
+        prefix: ['/api/*', '/backend/*']
     });
 }
 
-const TEST_SERVER = '{{ server }}';
+const TESTING_SERVER = '{{ server }}';
+const SERVERS = {
+    default: '{{ server }}'
+};
+const TEST_SERVER = SERVERS[process.env.npm_config_server] || TESTING_SERVER;
 // 测试环境使用线下测试数据
 if (process.env.NODE_ENV === 'testing') {
     module.exports.devServer.proxy = {
+        '/backend/*': {
+            target: TEST_SERVER,
+            changeOrigin: true
+            // pathRewrite: {
+            //     '^/bridge': '/'
+            // }
+        },
         '/api/*': {
             target: TEST_SERVER,
             changeOrigin: true
@@ -227,6 +275,5 @@ if (process.env.NODE_ENV === 'production') {
     ]);
 }
 else {
-    module.exports.plugins = (module.exports.plugins || []).concat([
-    ]);
+    module.exports.plugins = (module.exports.plugins || []).concat([]);
 }

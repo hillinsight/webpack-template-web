@@ -12,14 +12,21 @@
  *
  * @file Title
  * @author lifayu(fyli@hillinsight.com)
- * @since 2017-08-09 15:36
+ * @since 2017-12-15 19:15
  */
-import './dialog/index';
 
-const install = function (Vue) {
-    if (install.installed) return;
+const validator = {};
+
+validator.checkNumber = function (rule, value, cb) {
+    if (!value) {
+        cb(new Error(rule.message || '不能为空'));
+    }
+    else if (/^\d{1,}(\.\d{1,})?$/g.test('' + value)) {
+        cb();
+    }
+    else {
+        cb(new Error(rule.message || '必须是数字'));
+    }
 };
 
-export default {
-    install
-};
+export default validator;

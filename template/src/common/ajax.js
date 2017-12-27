@@ -96,6 +96,10 @@ function request(url, options) {
 
     options.url += '?_=' + Date.now();
 
+    if (options.query) {
+        options.url += '&' + $.param(options.query);
+    }
+
     options = hooks.handleRequestOptions(options);
 
     // options.contentType = 'application/json; charset=utf-8';
@@ -113,22 +117,23 @@ function request(url, options) {
         // else {
         //     deferred.reject(json.error);
         // }
-        else if (json.success) {
+        else if (json.code === 0 || json.success) {
             let data = json.data || json.result || json.page;
             deferred.resolve(data);
             return data;
         }
         else {
-            if (json.message && json.message.redirect) {
+            let message = json.message || json.msg;
+            if (message && message.redirect) {
                 deferred.reject({
                     code: ERROR_CODE.ERROR_NOT_LOGINED,
-                    message: json.message
+                    message: message
                 });
             }
             else {
                 deferred.reject({
                     code: json.code || ERROR_CODE.ERROR_UNKNOWN,
-                    message: json.message
+                    message: message
                 });
             }
         }
@@ -142,6 +147,9 @@ function request(url, options) {
         else if (status === 401) {
             error = '用户未登录';
             code = ERROR_CODE.ERROR_NOT_LOGINED;
+        }
+        else if (status === 400) {
+            error = xhr.responseJSON.message;
         }
         else if (status < 200 || (status >= 300 && status !== 304)) { // 服务器没有正常返回
             error = '发送网络请求失败';

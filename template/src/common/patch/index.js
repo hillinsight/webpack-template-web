@@ -17,6 +17,5 @@
 
 import './tree-store-patch';
 import './menu-patch';
-import './table-body-patch';
 
 export default {};

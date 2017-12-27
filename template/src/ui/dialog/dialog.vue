@@ -1,10 +1,10 @@
 <template>
     <div class="h-dialog">
         <el-dialog :title="title"
-                   v-model="dialogVisible"
-                   :size="size"
+                   :visible.sync="dialogVisible"
                    :close-on-click-modal="closeOnClickModal"
                    :custom-class="customClass"
+                   :width="width"
                    @close="close">
             <ui-dialog-content></ui-dialog-content>
         </el-dialog>
@@ -15,15 +15,14 @@
 <script>
     export default{
         props: {
+            width: String,
             title: String,
-            size: String,
             customClass: String,
             closeOnClickModal: Boolean
         },
         data() {
             return {
-                dialogVisible: true,
-                width: 0
+                dialogVisible: true
             };
         },
         components: {
@@ -33,19 +32,14 @@
         },
         methods: {
             close() {
-                this.$emit('beforeDestroy');
                 this.dialogVisible = false;
+                this.$emit('beforeDestroy');
                 this.$destroy();
             }
         },
         mounted() {
         },
         watch: {
-            width() {
-                if (this.width > 0) {
-                    $('.el-dialog', this.$el).width(this.width);
-                }
-            }
         }
-    }
+    };
 </script>
